@@ -17,29 +17,29 @@
 
 ```mermaid
 sequenceDiagram
-    participant User as ユーザー
-    participant IC as ICカード/モバイルパス
-    participant Box as リサイクルボックス
-    participant Sensor as 重量センサー
-    participant AWS as AWS IoT Core
-    participant Lambda as Lambda関数
-    participant Signage as サイネージ
-    participant App as ユーザーアプリ
-    participant DB as DynamoDB
+    participant User as "ユーザー"
+    participant IC as "ICカード/モバイルパス"
+    participant Box as "リサイクルボックス"
+    participant Sensor as "重量センサー"
+    participant AWS as "AWS IoT Core"
+    participant Lambda as "Lambda関数"
+    participant Signage as "サイネージ"
+    participant App as "ユーザーアプリ"
+    participant DB as "DynamoDB"
 
-    User->>IC: 1. ICカード/モバイルパスをタッチ
-    IC->>Box: 2. 認証成功 → ボックス開錠
-    User->>Box: 3. ペットボトルを投入
-    Box->>Sensor: 4. 重量変化を検知
-    Sensor->>AWS: 5. MQTT送信: リサイクル成功
-    AWS->>Lambda: 6. IoT Rule トリガー
-    Lambda->>DB: 7. QRトークン生成・保存
-    Lambda->>Signage: 8. QRコード表示
-    User->>App: 9. QRコードをスキャン
-    App->>Lambda: 10. QR検証・ポイント付与リクエスト
-    Lambda->>DB: 11. ポイント加算・トークン無効化
-    Lambda->>App: 12. ポイント付与完了
-    App->>User: 13. 景品交換可能
+    User->>IC: "1. ICカード/モバイルパスをタッチ"
+    IC->>Box: "2. 認証成功 ボックス開錠"
+    User->>Box: "3. ペットボトルを投入"
+    Box->>Sensor: "4. 重量変化を検知"
+    Sensor->>AWS: "5. MQTT送信: リサイクル成功"
+    AWS->>Lambda: "6. IoT Rule トリガー"
+    Lambda->>DB: "7. QRトークン生成・保存"
+    Lambda->>Signage: "8. QRコード表示"
+    User->>App: "9. QRコードをスキャン"
+    App->>Lambda: "10. QR検証・ポイント付与リクエスト"
+    Lambda->>DB: "11. ポイント加算・トークン無効化"
+    Lambda->>App: "12. ポイント付与完了"
+    App->>User: "13. 景品交換可能"
 ```
 
 ## システム構成図
