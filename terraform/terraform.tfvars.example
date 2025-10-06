@@ -1,0 +1,35 @@
+# Example Terraform Variables File
+# Copy this file to terraform.tfvars and customize for your environment
+
+# General Configuration
+aws_region   = "ap-northeast-1"
+environment  = "dev"  # dev, staging, production
+project_name = "recycle-system"
+team_name    = "backend-team"
+cost_center  = "engineering"
+
+# DynamoDB Configuration
+dynamodb_billing_mode = "PAY_PER_REQUEST"  # PAY_PER_REQUEST or PROVISIONED
+
+# For PROVISIONED mode, configure these:
+# dynamodb_autoscaling_min_capacity = 5
+# dynamodb_autoscaling_max_capacity = 100
+
+# Security Configuration
+enable_deletion_protection     = true
+enable_point_in_time_recovery  = true
+
+# Monitoring Configuration
+enable_cloudwatch_alarms = true
+alarm_notification_email = "alerts@yourcompany.com"
+
+# Backup Configuration
+backup_retention_days = 7
+
+# Feature Flags
+enable_advanced_monitoring = false
+enable_xray_tracing       = false
+
+# Resource Naming (optional)
+# resource_name_prefix = "my"
+# resource_name_suffix = "v1"

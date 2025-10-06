@@ -1,0 +1,559 @@
+openapi: 3.0.3
+info:
+  title: Recycle Point System API
+  description: API for managing recycle points and rewards
+  version: 1.0.0
+  contact:
+    name: Development Team
+    email: dev@recycle-system.com
+
+servers:
+  - url: https://api.recycle-system.com/v1
+    description: Production server
+  - url: https://dev-api.recycle-system.com/v1
+    description: Development server
+
+security:
+  - BearerAuth: []
+
+paths:
+  /qr/redeem:
+    post:
+      tags:
+        - QR
+      summary: Redeem QR code for points
+      description: Scan QR code from signage to earn points
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - qr_token
+              properties:
+                qr_token:
+                  type: string
+                  example: "qr_abc123def456"
+      responses:
+        '200':
+          description: Points added successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PointRedeemResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /users/me:
+    get:
+      tags:
+        - User
+      summary: Get user information
+      description: Get current user information and point balance
+      responses:
+        '200':
+          description: User information retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /users/me/balance:
+    get:
+      tags:
+        - User
+      summary: Get point balance
+      description: Get current point balance
+      responses:
+        '200':
+          description: Balance retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BalanceResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /users/me/transactions:
+    get:
+      tags:
+        - User
+      summary: Get transaction history
+      description: Get user point transaction history
+      parameters:
+        - name: limit
+          in: query
+          description: Number of items to return
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+        - name: nextToken
+          in: query
+          description: Pagination token
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Transaction history retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TransactionListResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /rewards:
+    get:
+      tags:
+        - Reward
+      summary: Get rewards list
+      description: Get list of available rewards
+      parameters:
+        - name: is_active
+          in: query
+          description: Get only active rewards
+          schema:
+            type: boolean
+            default: true
+      responses:
+        '200':
+          description: Rewards list retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RewardListResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /rewards/{rewardId}:
+    get:
+      tags:
+        - Reward
+      summary: Get reward details
+      description: Get detailed information about a specific reward
+      parameters:
+        - name: rewardId
+          in: path
+          required: true
+          description: Reward ID
+          schema:
+            type: string
+            example: "reward_001"
+      responses:
+        '200':
+          description: Reward details retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RewardResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /rewards/{rewardId}/exchange:
+    post:
+      tags:
+        - Reward
+      summary: Exchange reward
+      description: Exchange points for a reward
+      parameters:
+        - name: rewardId
+          in: path
+          required: true
+          description: Reward ID
+          schema:
+            type: string
+            example: "reward_001"
+      responses:
+        '200':
+          description: Reward exchanged successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExchangeResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /recycle/events:
+    get:
+      tags:
+        - RecycleEvent
+      summary: Get recycle event history
+      description: Get user recycle event history
+      parameters:
+        - name: limit
+          in: query
+          description: Number of items to return
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+        - name: nextToken
+          in: query
+          description: Pagination token
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Recycle event history retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RecycleEventListResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /admin/qr/generate:
+    post:
+      tags:
+        - Admin
+      summary: Generate QR token
+      description: Generate QR token manually for testing
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - location_id
+                - points_value
+              properties:
+                location_id:
+                  type: string
+                  description: Recycle box location ID
+                  example: "location_001"
+                points_value:
+                  type: integer
+                  description: Points to award
+                  minimum: 1
+                  maximum: 1000
+                  example: 10
+                expires_in_minutes:
+                  type: integer
+                  description: Expiration time in minutes
+                  default: 20
+                  example: 20
+      responses:
+        '200':
+          description: QR token generated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/QRGenerateResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: Cognito JWT Token
+
+  schemas:
+    UserResponse:
+      type: object
+      properties:
+        user_id:
+          type: string
+          example: "user_123"
+        email:
+          type: string
+          format: email
+          example: "user@example.com"
+        name:
+          type: string
+          example: "John Doe"
+        points_balance:
+          type: integer
+          example: 150
+        created_at:
+          type: string
+          format: date-time
+          example: "2024-01-01T00:00:00Z"
+        updated_at:
+          type: string
+          format: date-time
+          example: "2024-01-15T10:30:00Z"
+
+    BalanceResponse:
+      type: object
+      properties:
+        user_id:
+          type: string
+          example: "user_123"
+        points_balance:
+          type: integer
+          example: 150
+        updated_at:
+          type: string
+          format: date-time
+          example: "2024-01-15T10:30:00Z"
+
+    PointRedeemResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        points_added:
+          type: integer
+          example: 10
+        new_balance:
+          type: integer
+          example: 160
+        qr_token:
+          type: string
+          example: "qr_abc123def456"
+        redeemed_at:
+          type: string
+          format: date-time
+          example: "2024-01-15T10:30:00Z"
+
+    RewardResponse:
+      type: object
+      properties:
+        reward_id:
+          type: string
+          example: "reward_001"
+        name:
+          type: string
+          example: "Eco Bag"
+        description:
+          type: string
+          example: "Environmentally friendly cotton eco bag"
+        points_cost:
+          type: integer
+          example: 100
+        stock_count:
+          type: integer
+          example: 50
+        is_active:
+          type: boolean
+          example: true
+        image_url:
+          type: string
+          format: uri
+          example: "https://example.com/images/ecobag.jpg"
+        created_at:
+          type: string
+          format: date-time
+          example: "2024-01-01T00:00:00Z"
+
+    RewardListResponse:
+      type: object
+      properties:
+        rewards:
+          type: array
+          items:
+            $ref: '#/components/schemas/RewardResponse'
+        total_count:
+          type: integer
+          example: 25
+
+    ExchangeResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        reward_id:
+          type: string
+          example: "reward_001"
+        reward_name:
+          type: string
+          example: "Eco Bag"
+        points_used:
+          type: integer
+          example: 100
+        new_balance:
+          type: integer
+          example: 50
+        exchange_id:
+          type: string
+          example: "exchange_abc123"
+        exchanged_at:
+          type: string
+          format: date-time
+          example: "2024-01-15T10:30:00Z"
+
+    TransactionResponse:
+      type: object
+      properties:
+        transaction_id:
+          type: string
+          example: "txn_123"
+        user_id:
+          type: string
+          example: "user_123"
+        points_change:
+          type: integer
+          example: 10
+        transaction_type:
+          type: string
+          enum: [earn, spend, exchange]
+          example: "earn"
+        description:
+          type: string
+          example: "Recycle point earned"
+        qr_token_id:
+          type: string
+          nullable: true
+          example: "qr_abc123def456"
+        reward_id:
+          type: string
+          nullable: true
+          example: "reward_001"
+        created_at:
+          type: string
+          format: date-time
+          example: "2024-01-15T10:30:00Z"
+
+    TransactionListResponse:
+      type: object
+      properties:
+        transactions:
+          type: array
+          items:
+            $ref: '#/components/schemas/TransactionResponse'
+        next_token:
+          type: string
+          nullable: true
+          example: "eyJ1c2VyX2lkIjoiMTIzIn0="
+
+    RecycleEventResponse:
+      type: object
+      properties:
+        event_id:
+          type: string
+          example: "event_123"
+        location_id:
+          type: string
+          example: "location_001"
+        location_name:
+          type: string
+          example: "Station Square"
+        weight_detected:
+          type: number
+          example: 0.5
+        qr_token_id:
+          type: string
+          example: "qr_abc123def456"
+        points_earned:
+          type: integer
+          example: 10
+        created_at:
+          type: string
+          format: date-time
+          example: "2024-01-15T10:30:00Z"
+
+    RecycleEventListResponse:
+      type: object
+      properties:
+        events:
+          type: array
+          items:
+            $ref: '#/components/schemas/RecycleEventResponse'
+        next_token:
+          type: string
+          nullable: true
+          example: "eyJldmVudF9pZCI6IjEyMyJ9"
+
+    QRGenerateResponse:
+      type: object
+      properties:
+        qr_token:
+          type: string
+          example: "qr_abc123def456"
+        qr_code_url:
+          type: string
+          format: uri
+          example: "https://api.recycle-system.com/v1/qr/qr_abc123def456.png"
+        expires_at:
+          type: string
+          format: date-time
+          example: "2024-01-15T10:50:00Z"
+        points_value:
+          type: integer
+          example: 10
+        location_id:
+          type: string
+          example: "location_001"
+
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+          example: "INVALID_QR_TOKEN"
+        message:
+          type: string
+          example: "QR token is invalid"
+        details:
+          type: object
+          additionalProperties: true
+
+  responses:
+    BadRequest:
+      description: Bad request
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+
+    Unauthorized:
+      description: Authentication required
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+
+    Forbidden:
+      description: Access forbidden
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+
+    InternalServerError:
+      description: Internal server error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+
+tags:
+  - name: QR
+    description: QR code scanning and point redemption
+  - name: User
+    description: User information and balance management
+  - name: Reward
+    description: Reward listing and exchange
+  - name: RecycleEvent
+    description: Recycle event history
+  - name: Admin
+    description: Admin functions
