@@ -1,0 +1,12 @@
+{
+  "location_id": {"S": "location_001"},
+  "name": {"S": "渋谷駅前"},
+  "address": {"S": "東京都渋谷区道玄坂1-1-1"},
+  "latitude": {"N": "35.6581"},
+  "longitude": {"N": "139.7016"},
+  "status": {"S": "active"},
+  "points_per_recycle": {"N": "10"},
+  "description": {"S": "渋谷駅前メインエントランスのリサイクルボックス"},
+  "created_at": {"S": "2024-01-01T00:00:00Z"},
+  "updated_at": {"S": "2024-01-15T10:30:00Z"}
+}

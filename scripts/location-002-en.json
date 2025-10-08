@@ -1,0 +1,12 @@
+{
+  "location_id": {"S": "location_002"},
+  "name": {"S": "Shinjuku Station East Exit"},
+  "address": {"S": "3-38-1 Shinjuku, Shinjuku-ku, Tokyo"},
+  "latitude": {"N": "35.6909"},
+  "longitude": {"N": "139.7005"},
+  "status": {"S": "active"},
+  "points_per_recycle": {"N": "10"},
+  "description": {"S": "Recycle box at Shinjuku Station East Exit Plaza"},
+  "created_at": {"S": "2024-01-01T00:00:00Z"},
+  "updated_at": {"S": "2024-01-15T10:30:00Z"}
+}
