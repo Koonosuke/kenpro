@@ -216,6 +216,52 @@ paths:
         '401':
           $ref: '#/components/responses/Unauthorized'
 
+  /locations:
+    get:
+      tags:
+        - Location
+      summary: Get all recycle locations
+      description: Retrieve list of all available recycle box locations
+      responses:
+        '200':
+          description: Locations retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LocationListResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /locations/{location_id}:
+    get:
+      tags:
+        - Location
+      summary: Get location details
+      description: Get detailed information about a specific location
+      parameters:
+        - name: location_id
+          in: path
+          required: true
+          description: Unique identifier for the location
+          schema:
+            type: string
+            example: "location_001"
+      responses:
+        '200':
+          description: Location details retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Location'
+        '404':
+          description: Location not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
   /admin/qr/generate:
     post:
       tags:
@@ -496,6 +542,62 @@ components:
         location_id:
           type: string
           example: "location_001"
+
+    Location:
+      type: object
+      properties:
+        location_id:
+          type: string
+          example: "location_001"
+        name:
+          type: string
+          example: "Station Square"
+        address:
+          type: string
+          example: "1-1-1 Shibuya, Tokyo"
+        latitude:
+          type: number
+          format: float
+          example: 35.6581
+        longitude:
+          type: number
+          format: float
+          example: 139.7016
+        status:
+          type: string
+          enum: [active, maintenance, offline]
+          example: "active"
+        points_per_recycle:
+          type: integer
+          minimum: 1
+          maximum: 1000
+          example: 10
+        description:
+          type: string
+          example: "Main entrance recycle box"
+        created_at:
+          type: string
+          format: date-time
+          example: "2024-01-01T00:00:00Z"
+        updated_at:
+          type: string
+          format: date-time
+          example: "2024-01-15T10:30:00Z"
+
+    LocationListResponse:
+      type: object
+      properties:
+        locations:
+          type: array
+          items:
+            $ref: '#/components/schemas/Location'
+        total_count:
+          type: integer
+          example: 5
+        next_token:
+          type: string
+          nullable: true
+          example: "eyJsb2NhdGlvbl9pZCI6IjAwMSJ9"
 
     ErrorResponse:
       type: object
