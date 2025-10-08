@@ -12,12 +12,12 @@ terraform {
   }
 
   # Remote state management for team collaboration
-  backend "s3" {
-    # Configure in terraform.tfvars or environment variables
-    # bucket = "your-terraform-state-bucket"
-    # key    = "recycle-system/terraform.tfstate"
-    # region = "ap-northeast-1"
-  }
+  # backend "s3" {
+  #   # Configure in terraform.tfvars or environment variables
+  #   # bucket = "your-terraform-state-bucket"
+  #   # key    = "recycle-system/terraform.tfstate"
+  #   # region = "us-east-1"
+  # }
 }
 
 # Configure the AWS Provider

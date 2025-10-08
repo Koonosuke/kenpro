@@ -2,7 +2,7 @@
 # Copy this file to terraform.tfvars and customize for your environment
 
 # General Configuration
-aws_region   = "ap-northeast-1"
+aws_region   = "us-east-1"
 environment  = "dev"  # dev, staging, production
 project_name = "recycle-system"
 team_name    = "backend-team"

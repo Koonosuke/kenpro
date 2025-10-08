@@ -2,7 +2,7 @@
 # Minimal configuration for cost optimization (same as dev for now)
 
 # General Configuration
-aws_region   = "ap-northeast-1"
+aws_region   = "us-east-1"
 environment  = "production"
 project_name = "recycle-system"
 team_name    = "backend-team"
