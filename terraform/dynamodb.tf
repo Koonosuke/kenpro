@@ -5,9 +5,9 @@
 resource "aws_dynamodb_table" "tables" {
   for_each = local.dynamodb_tables
 
-  name           = each.value.table_name
-  billing_mode   = "PAY_PER_REQUEST"  # Always use on-demand for cost optimization
-  hash_key       = each.value.hash_key
+  name         = each.value.table_name
+  billing_mode = "PAY_PER_REQUEST" # Always use on-demand for cost optimization
+  hash_key     = each.value.hash_key
 
   # Attribute definitions
   dynamic "attribute" {
@@ -24,7 +24,7 @@ resource "aws_dynamodb_table" "tables" {
     content {
       name            = global_secondary_index.value.name
       hash_key        = global_secondary_index.value.hash_key
-      projection_type = "KEYS_ONLY"  # Minimal projection for cost savings
+      projection_type = "KEYS_ONLY" # Minimal projection for cost savings
     }
   }
 

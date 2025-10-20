@@ -3,7 +3,7 @@
 
 terraform {
   required_version = ">= 1.0"
-  
+
   required_providers {
     aws = {
       source  = "hashicorp/aws"
@@ -23,7 +23,7 @@ terraform {
 # Configure the AWS Provider
 provider "aws" {
   region = var.aws_region
-  
+
   default_tags {
     tags = {
       Project     = "recycle-point-system"
@@ -48,10 +48,10 @@ locals {
     Owner       = var.team_name
     CostCenter  = var.cost_center
   }
-  
+
   # Naming convention
   name_prefix = "${var.project_name}-${var.environment}"
-  
+
   # DynamoDB table configurations (minimal for cost optimization)
   dynamodb_tables = {
     qr_tokens = {
@@ -65,7 +65,7 @@ locals {
       ]
       # GSI removed for cost optimization - will be added when needed
     }
-    
+
     locations = {
       table_name = "${local.name_prefix}-locations"
       hash_key   = "location_id"
@@ -76,7 +76,7 @@ locals {
         }
       ]
     }
-    
+
     recycle_events = {
       table_name = "${local.name_prefix}-recycle-events"
       hash_key   = "event_id"
@@ -88,7 +88,7 @@ locals {
       ]
       # GSI removed for cost optimization - will be added when needed
     }
-    
+
     users = {
       table_name = "${local.name_prefix}-users"
       hash_key   = "user_id"
@@ -100,7 +100,7 @@ locals {
       ]
       # GSI removed for cost optimization - will be added when needed
     }
-    
+
     points_ledger = {
       table_name = "${local.name_prefix}-points-ledger"
       hash_key   = "transaction_id"
@@ -112,7 +112,7 @@ locals {
       ]
       # GSI removed for cost optimization - will be added when needed
     }
-    
+
     rewards = {
       table_name = "${local.name_prefix}-rewards"
       hash_key   = "reward_id"
@@ -123,5 +123,6 @@ locals {
         }
       ]
     }
+
   }
 }

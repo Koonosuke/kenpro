@@ -1,0 +1,62 @@
+# Terraform Remote State Backend Configuration Example
+# ⚠️ このファイルをコピーして backend.tf を作成してください
+# ⚠️ backend.tf は .gitignore に追加してGitにコミットしないでください
+#
+# コピーコマンド:
+#   Copy-Item backend.tf.example backend.tf
+#
+# その後、YOUR_ACCOUNT_ID を自分のAWSアカウントIDに置き換えてください
+
+terraform {
+  backend "s3" {
+    # S3バケット名（グローバルで一意であれば何でもOK）
+    # 
+    # 推奨: シンプルでわかりやすい名前
+    #   例: "your-project-terraform-state-yourname"
+    #
+    # プロジェクト名 + 識別子がおすすめ:
+    #   bucket = "recycle-system-terraform-state-kenpro"
+    #   bucket = "myapp-terraform-state-dev"
+    #   bucket = "company-project-tfstate"
+    #
+    # アカウントIDを含めることも可能（複数アカウント管理時に便利）:
+    #   bucket = "recycle-system-terraform-state-123456789012"
+    #
+    bucket = "recycle-system-terraform-state-YOUR_NAME"
+    
+    # stateファイルのパス（環境ごとに分ける）
+    # dev環境: dev/terraform.tfstate
+    # prod環境: prod/terraform.tfstate
+    key = "dev/terraform.tfstate"
+    
+    # AWSリージョン
+    region = "us-east-1"
+    
+    # DynamoDBテーブル名（ロック管理用）
+    dynamodb_table = "terraform-state-lock"
+    
+    # サーバーサイド暗号化を有効化
+    encrypt = true
+  }
+}
+
+# 📝 セットアップ手順:
+#
+# 1. このファイルをコピー:
+#    Copy-Item backend.tf.example backend.tf
+#
+# 2. backend.tf のバケット名を変更:
+#    bucket = "recycle-system-terraform-state-YOUR_NAME"
+#    例: bucket = "recycle-system-terraform-state-kenpro"
+#
+# 3. scripts/setup-backend-storage.ps1 も同じバケット名に変更
+#
+# 4. S3バケットとDynamoDBテーブルを作成:
+#    .\scripts\setup-backend-storage.ps1
+#
+# 5. Terraformを初期化:
+#    terraform init
+#
+# 6. （既存のstateがある場合）stateを移行:
+#    terraform init -migrate-state
+

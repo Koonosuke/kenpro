@@ -1,0 +1,248 @@
+name: Terraform CI/CD
+
+# ⚠️ このワークフローを使用する前に:
+# 1. GitHub Secrets に AWS認証情報を設定してください
+#    Settings → Secrets and variables → Actions
+#    - AWS_ACCESS_KEY_ID
+#    - AWS_SECRET_ACCESS_KEY
+# 
+# 2. terraform apply は手動実行のみに設定されています（安全のため）
+#    自動実行したい場合は terraform-apply-auto ジョブのコメントを外してください
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - 'terraform/**'
+      - '.github/workflows/terraform.yml'
+  
+  workflow_dispatch:  # 手動実行を許可
+    inputs:
+      action:
+        description: 'Terraform action to perform'
+        required: true
+        default: 'plan'
+        type: choice
+        options:
+          - plan
+          - apply
+          - destroy
+
+# セキュリティ: 最小権限の原則
+permissions:
+  contents: read
+  pull-requests: write  # PRにコメントを投稿するため
+
+env:
+  AWS_REGION: us-east-1
+  TERRAFORM_VERSION: 1.5.7
+  WORKING_DIRECTORY: terraform
+
+jobs:
+  terraform-plan:
+    name: Terraform Plan
+    runs-on: ubuntu-latest
+    
+    # PRの場合のみ実行（mainへのpushではskip）
+    if: github.event_name == 'pull_request'
+    
+    defaults:
+      run:
+        working-directory: ${{ env.WORKING_DIRECTORY }}
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: ${{ env.TERRAFORM_VERSION }}
+      
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+      
+      - name: Terraform Format Check
+        id: fmt
+        run: terraform fmt -check -recursive
+        continue-on-error: true
+      
+      - name: Terraform Init
+        id: init
+        run: terraform init
+      
+      - name: Terraform Validate
+        id: validate
+        run: terraform validate -no-color
+      
+      - name: Terraform Plan
+        id: plan
+        run: terraform plan -no-color -out=tfplan
+        continue-on-error: true
+      
+      - name: Comment PR with Plan
+        uses: actions/github-script@v7
+        if: github.event_name == 'pull_request'
+        env:
+          PLAN: "${{ steps.plan.outputs.stdout }}"
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const output = `#### Terraform Format and Style 🖌\`${{ steps.fmt.outcome }}\`
+            #### Terraform Initialization ⚙️\`${{ steps.init.outcome }}\`
+            #### Terraform Validation 🤖\`${{ steps.validate.outcome }}\`
+            #### Terraform Plan 📖\`${{ steps.plan.outcome }}\`
+            
+            <details><summary>Show Plan</summary>
+            
+            \`\`\`terraform
+            ${process.env.PLAN}
+            \`\`\`
+            
+            </details>
+            
+            *Pushed by: @${{ github.actor }}, Action: \`${{ github.event_name }}\`*`;
+            
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: output
+            })
+      
+      - name: Terraform Plan Status
+        if: steps.plan.outcome == 'failure'
+        run: exit 1
+
+  terraform-apply-manual:
+    name: Terraform Apply (Manual Only)
+    runs-on: ubuntu-latest
+    
+    # 手動実行（workflow_dispatch）でのみ実行
+    # かつ、action input が 'apply' の場合のみ
+    if: github.event_name == 'workflow_dispatch' && github.event.inputs.action == 'apply'
+    
+    defaults:
+      run:
+        working-directory: ${{ env.WORKING_DIRECTORY }}
+    
+    # 手動承認を要求（推奨）
+    environment: production
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: ${{ env.TERRAFORM_VERSION }}
+      
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+      
+      - name: Terraform Init
+        run: terraform init
+      
+      - name: Terraform Validate
+        run: terraform validate
+      
+      - name: Terraform Plan
+        run: terraform plan -var-file=environments/dev.tfvars -out=tfplan
+      
+      - name: Terraform Apply
+        run: terraform apply -auto-approve tfplan
+      
+      - name: Notify Success
+        if: success()
+        run: |
+          echo "✅ Terraform apply completed successfully!"
+          echo "🚀 Infrastructure has been updated."
+
+  # ⚠️ 自動apply（危険）
+  # mainブランチへのpush時に自動的にapplyを実行したい場合は、
+  # 以下のコメントを外してください（非推奨）
+  #
+  # terraform-apply-auto:
+  #   name: Terraform Apply (Auto - DANGEROUS)
+  #   runs-on: ubuntu-latest
+  #   
+  #   if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+  #   
+  #   defaults:
+  #     run:
+  #       working-directory: ${{ env.WORKING_DIRECTORY }}
+  #   
+  #   steps:
+  #     - name: Checkout repository
+  #       uses: actions/checkout@v4
+  #     
+  #     - name: Setup Terraform
+  #       uses: hashicorp/setup-terraform@v3
+  #       with:
+  #         terraform_version: ${{ env.TERRAFORM_VERSION }}
+  #     
+  #     - name: Configure AWS credentials
+  #       uses: aws-actions/configure-aws-credentials@v4
+  #       with:
+  #         aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+  #         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+  #         aws-region: ${{ env.AWS_REGION }}
+  #     
+  #     - name: Terraform Init
+  #       run: terraform init
+  #     
+  #     - name: Terraform Apply
+  #       run: terraform apply -var-file=environments/dev.tfvars -auto-approve
+
+  terraform-destroy:
+    name: Terraform Destroy (Manual Only)
+    runs-on: ubuntu-latest
+    
+    # 手動実行のみ許可
+    if: github.event_name == 'workflow_dispatch'
+    
+    defaults:
+      run:
+        working-directory: ${{ env.WORKING_DIRECTORY }}
+    
+    # 本番環境の破壊は手動承認を要求
+    environment: destroy-approval
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: ${{ env.TERRAFORM_VERSION }}
+      
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+      
+      - name: Terraform Init
+        run: terraform init
+      
+      - name: Terraform Destroy
+        run: terraform destroy -auto-approve
+      
+      - name: Notify Destruction
+        if: success()
+        run: |
+          echo "⚠️ Infrastructure has been destroyed!"
+          echo "🗑️ All resources have been removed."
+
