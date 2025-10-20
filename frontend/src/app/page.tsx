@@ -48,12 +48,12 @@ export default function Home() {
             <p className="text-gray-600 mb-4">
               獲得したポイントで景品と交換
             </p>
-            <button
-              disabled
-              className="inline-block px-4 py-2 bg-gray-300 text-gray-500 rounded-lg cursor-not-allowed"
+            <Link
+              href="/rewards"
+              className="inline-block px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors"
             >
-              準備中
-            </button>
+              景品を選ぶ
+            </Link>
           </div>
         </div>
 

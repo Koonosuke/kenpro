@@ -26,63 +26,41 @@ export default function MapPage() {
   const [filter, setFilter] = useState<'active' | 'maintenance' | 'offline' | 'all'>('all');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-
-  // Mock data for development (replace with actual API call)
-  const mockLocations: Location[] = [
-    {
-      location_id: 'location_001',
-      name: 'Shibuya Station',
-      address: '1-1-1 Dogenzaka, Shibuya-ku, Tokyo',
-      latitude: 35.6581,
-      longitude: 139.7016,
-      status: 'active',
-      points_per_recycle: 10,
-      description: 'Main entrance recycle box at Shibuya Station',
-      created_at: '2024-01-01T00:00:00Z',
-      updated_at: '2024-01-15T10:30:00Z',
-    },
-    {
-      location_id: 'location_002',
-      name: 'Shinjuku Station East Exit',
-      address: '3-38-1 Shinjuku, Shinjuku-ku, Tokyo',
-      latitude: 35.6909,
-      longitude: 139.7005,
-      status: 'active',
-      points_per_recycle: 10,
-      description: 'Recycle box at Shinjuku Station East Exit Plaza',
-      created_at: '2024-01-01T00:00:00Z',
-      updated_at: '2024-01-15T10:30:00Z',
-    },
-    {
-      location_id: 'location_003',
-      name: 'Ikebukuro Station West Exit',
-      address: '1-1-25 Nishi-Ikebukuro, Toshima-ku, Tokyo',
-      latitude: 35.7295,
-      longitude: 139.7109,
-      status: 'active',
-      points_per_recycle: 10,
-      description: 'Recycle box on pedestrian deck at Ikebukuro Station West Exit',
-      created_at: '2024-01-01T00:00:00Z',
-      updated_at: '2024-01-15T10:30:00Z',
-    },
-  ];
+  const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
 
   useEffect(() => {
-    // Simulate API call
     const fetchLocations = async () => {
       try {
         setLoading(true);
-        // TODO: Replace with actual API call
-        // const response = await fetch('/api/locations');
-        // const data = await response.json();
-        // setLocations(data.locations);
-        
-        // Use mock data for now
-        await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate loading
-        setLocations(mockLocations);
+        if (!apiBaseUrl) {
+          throw new Error('API ベース URL が設定されていません。');
+        }
+
+        const response = await fetch(`${apiBaseUrl}/locations`, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          cache: 'no-store',
+        });
+
+        if (!response.ok) {
+          throw new Error(`位置情報の取得に失敗しました (status: ${response.status})`);
+        }
+
+        const data = await response.json();
+        const fetchedLocations: Location[] = Array.isArray(data?.locations)
+          ? data.locations
+          : [];
+
+        setLocations(fetchedLocations);
         setError(null);
       } catch (err) {
-        setError('位置情報の取得に失敗しました');
+        setError(
+          err instanceof Error
+            ? err.message
+            : '位置情報の取得に失敗しました',
+        );
         console.error('Error fetching locations:', err);
       } finally {
         setLoading(false);
@@ -90,7 +68,7 @@ export default function MapPage() {
     };
 
     fetchLocations();
-  }, []);
+  }, [apiBaseUrl]);
 
   const handleLocationSelect = (location: Location) => {
     setSelectedLocation(location);
