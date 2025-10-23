@@ -394,10 +394,37 @@ components:
         is_active:
           type: boolean
           example: true
+        category:
+          type: string
+          example: "daily_goods"
         image_url:
           type: string
           format: uri
           example: "https://example.com/images/ecobag.jpg"
+        redeemable_from:
+          type: string
+          format: date-time
+          nullable: true
+          example: "2024-01-01T00:00:00Z"
+        redeemable_until:
+          type: string
+          format: date-time
+          nullable: true
+          example: "2024-12-31T23:59:59Z"
+        redemption_limit_per_user:
+          type: integer
+          nullable: true
+          example: 3
+        redemption_limit_per_day:
+          type: integer
+          nullable: true
+          example: 1
+        total_redeemed:
+          type: integer
+          example: 120
+        terms_and_conditions:
+          type: string
+          example: "One per customer per day. Present QR code when redeeming."
         created_at:
           type: string
           format: date-time
@@ -413,6 +440,10 @@ components:
         total_count:
           type: integer
           example: 25
+        next_token:
+          type: string
+          nullable: true
+          example: "eyJyZXdhcmRfaWQiOiJyZXdhcmRfMDAxIn0="
 
     ExchangeResponse:
       type: object
@@ -439,6 +470,13 @@ components:
           type: string
           format: date-time
           example: "2024-01-15T10:30:00Z"
+        status:
+          type: string
+          example: "completed"
+        voucher_code:
+          type: string
+          nullable: true
+          example: "VCHR-20241015-ABC123"
 
     TransactionResponse:
       type: object
@@ -454,8 +492,8 @@ components:
           example: 10
         transaction_type:
           type: string
-          enum: [earn, spend, exchange]
-          example: "earn"
+          enum: [earn, spend, exchange, reward_exchange]
+          example: "reward_exchange"
         description:
           type: string
           example: "Recycle point earned"
